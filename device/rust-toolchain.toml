@@ -1,8 +1,14 @@
 [toolchain]
 channel = "nightly-2023-11-19"
+# components = ["miri", "llvm-tools", "rust-src", "rustfmt", "clippy"]
+# components = ["rust-analyzer", "rustc", "llvm-tools", "rust-src", "rustfmt", "clippy"]
+# targets = ["thumbv6m-none-eabi", "thumbv7em-none-eabi", "thumbv7em-none-eabihf", "riscv32imc-unknown-none-elf", "riscv32imac-unknown-none-elf"]
+targets = ["thumbv6m-none-eabi"]
 
 [build]
 target = "thumbv6m-none-eabi"
-# components = [ "rustfmt", "rustc-dev", "rust-std", "clippy", "cargo", "rust-analyzer" ]
-# targets = [ "wasm32-unknown-unknown", "thumbv2-none-eabi" ]
-# profile = "minimal"
+# # components = [ "rustc", "rustfmt", "rustc-dev", "rust-std", "clippy", "cargo", "rust-analyzer" ]
+# components = [ "rust-src" ]
+# targets = [ "thumbv6m-none-eabi" ]
+# # profile = "minimal"
+

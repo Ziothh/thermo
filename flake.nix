@@ -21,20 +21,12 @@
         };
 
         # Read from `rust-toolchain.toml` instead of adding `rust-bin.nightly.latest.default` to devShell `buildInputs`
-        rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
 
         # Libraries that are mostly needed for tauri to work
         libraries = with pkgs; [
         ];
 
         packages = with pkgs; [
-          # Working with RP Pico directly via USB
-          picotool
-
-          # Using debugprobe
-          openocd-rp2040
-          gdb
-          minicom
         ];
 
         # Inputs needed at compile-time
@@ -51,15 +43,34 @@
         #   src = ./.;
         # };
 
-        devShells.default = pkgs.mkShell {
-          inherit buildInputs nativeBuildInputs;
-          # buildInputs = packages;
+        devShells = {
+          default = pkgs.mkShell {
+            # inherit buildInputs nativeBuildInputs;
+            # buildInputs = packages;
 
-          shellHook = ''
-          # export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath libraries}:$LD_LIBRARY_PATH
-          export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath libraries}
-          # source ./scripts/source.zsh
-          '';
+            shellHook = ''
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath libraries}
+            '';
+          };
+
+          device = let 
+            rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./device/rust-toolchain.toml;
+          in pkgs.mkShell {
+            nativeBuildInputs = [ rustToolchain ];
+            buildInputs = with pkgs; [
+              # Working with RP Pico directly via USB
+              picotool
+
+              # Using debugprobe
+              openocd-rp2040
+              gdb
+              minicom
+
+              # Cargo stuff
+              flip-link # A linker that protects against stack overflows
+              probe-rs
+            ];
+          };
         };
       });
 }
