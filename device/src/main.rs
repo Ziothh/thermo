@@ -39,7 +39,7 @@ fn main() -> ! {
     let core = pac::CorePeripherals::take().unwrap();
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.get_freq().to_Hz());
 
-    let mut dht11_pin = pins.gpio28.into_push_pull_output();
+    let mut dht11_pin = bsp::hal::gpio::InOutPin::new(pins.gpio28);
     match dht11_pin.set_high() {
         Ok(value) => info!("Set GPIO2 HIGH: {}", value),
         Err(err) => error!("Failed to set GPIO2 HIGH: {}", err),
