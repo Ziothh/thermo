@@ -1,27 +1,16 @@
-//! Blinks the LED on a Pico board
-//!
-//! This will blink an LED attached to GP25, which is the pin the Pico uses for the on-board LED.
 #![no_std]
 #![no_main]
 
-use bsp::{entry, hal::{pio::PIOExt, clocks::ClockSource}};
+use bsp::{entry, hal::clocks::ClockSource};
 use defmt::*;
 use defmt_rtt as _;
 use dht_sensor::DhtReading;
-use embedded_hal::digital::v2::{InputPin, OutputPin};
+use embedded_hal::digital::v2::OutputPin;
 use panic_probe as _;
 
-// Provide an alias for our BSP so we can switch targets quickly.
-// Uncomment the BSP you included in Cargo.toml, the rest of the code does not need to change.
 use rp_pico as bsp;
-// use sparkfun_pro_micro_rp2040 as bsp;
 
-use bsp::hal::{
-    clocks::{init_clocks_and_plls},
-    pac,
-    sio::Sio,
-    watchdog::Watchdog,
-};
+use bsp::hal::{clocks::init_clocks_and_plls, pac, sio::Sio, watchdog::Watchdog};
 
 #[entry]
 fn main() -> ! {
@@ -50,17 +39,11 @@ fn main() -> ! {
     let core = pac::CorePeripherals::take().unwrap();
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.get_freq().to_Hz());
 
-
     let mut dht11_pin = pins.gpio28.into_push_pull_output();
     match dht11_pin.set_high() {
         Ok(value) => info!("Set GPIO2 HIGH: {}", value),
         Err(err) => error!("Failed to set GPIO2 HIGH: {}", err),
     };
-    
-    // let (dht_pio, dht_sm, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
-    // let mut dht = Dht11::new(dht_pio, dht_sm, pins.gpio2.into_function());
-    // pac.PIO0.split(resets);
-    
 
     loop {
         info!("Reading from DHT11");
@@ -70,22 +53,16 @@ fn main() -> ! {
                     "Temp info:\nHumidity: {}\nTemperature: {}",
                     data.relative_humidity, data.temperature
                 );
-            },
+            }
             Err(error) => {
                 match error {
                     dht_sensor::DhtError::Timeout => {
-                        error!("Fucking timeout");
+                        error!("Timeout");
                     }
-                    _ => info!("Fuck you"),
-
-                    
+                    dht_sensor::DhtError::PinError(_e) => error!("DHT PinError"),
+                    dht_sensor::DhtError::ChecksumMismatch => error!("DHT ChecksumMismatch"),
                 }
-                // match error {
-                //     DhtError::Timeout => error!("DHT Timeout"),
-                //     DhtError::ReadError => error!("DHT ReadError"),
-                //     DhtError::CrcMismatch(one, two) => error!("DHT CrcMismatch: {{ one: {}, two: {} }}", one, two),
-                // };
-            },
+            }
         };
 
         delay.delay_ms(1000);
