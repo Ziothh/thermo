@@ -1,18 +1,27 @@
 #![no_std]
 #![no_main]
 
-use bsp::{entry, hal::clocks::ClockSource};
-use defmt::*;
-use defmt_rtt as _;
-use dht_sensor::DhtReading;
-use embedded_hal::digital::v2::OutputPin;
+use anyhow::anyhow;
+// Rename as Board Support Package
+use rp_pico as bsp;
+// Setup panic handler
 use panic_probe as _;
 
-use rp_pico as bsp;
+// For Serial Wire Debug (SWD)
+use defmt::*;
+use defmt_rtt as _;
 
-use bsp::hal::{clocks::init_clocks_and_plls, pac, sio::Sio, watchdog::Watchdog};
+use bsp::hal::{
+    clocks::{init_clocks_and_plls, ClockSource},
+    pac,
+    sio::Sio,
+    watchdog::Watchdog,
+};
+use embedded_hal::digital::v2::OutputPin;
 
-#[entry]
+use dht_sensor::DhtReading;
+
+#[bsp::entry]
 fn main() -> ! {
     let mut pac = pac::Peripherals::take().unwrap();
     let mut watchdog = Watchdog::new(pac.WATCHDOG);
@@ -40,6 +49,7 @@ fn main() -> ! {
     let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.get_freq().to_Hz());
 
     let mut dht11_pin = bsp::hal::gpio::InOutPin::new(pins.gpio28);
+    // Set pin high to not confuse the sensor
     match dht11_pin.set_high() {
         Ok(value) => info!("Set GPIO2 HIGH: {}", value),
         Err(err) => error!("Failed to set GPIO2 HIGH: {}", err),
@@ -55,18 +65,29 @@ fn main() -> ! {
                 );
             }
             Err(error) => {
-                match error {
-                    dht_sensor::DhtError::Timeout => {
-                        error!("Timeout");
-                    }
-                    dht_sensor::DhtError::PinError(_e) => error!("DHT PinError"),
-                    dht_sensor::DhtError::ChecksumMismatch => error!("DHT ChecksumMismatch"),
-                }
-            }
+                // error!("{}", anyhow!(error));
+            } //     match error {
+              //     dht_sensor::DhtError::Timeout => error!("Timeout"),
+              //     dht_sensor::DhtError::PinError(_e) => error!("DHT PinError"),
+              //     dht_sensor::DhtError::ChecksumMismatch => error!("DHT ChecksumMismatch"),
+              // },
         };
 
         delay.delay_ms(1000);
     }
 }
 
-// End of file
+// fn read_temp<P: dht_sensor::InputOutputPin<E>, E>(
+//     pin: &mut P,
+//     delay: &mut dyn dht_sensor::Delay,
+// ) -> Result<dht_sensor::dht11::Reading, anyhow::Error> {
+//
+//     let value = dht_sensor::dht11::Reading::read(delay, pin)?;
+//
+//     return anyhow::Ok(value);
+// }
+
+// struct Job<JArgs, SArgs> {
+//     callback: dyn Fn<JArgs>,
+//     setup: dyn Fn<SArgs>,
+// }
