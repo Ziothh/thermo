@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use anyhow::anyhow;
 // Rename as Board Support Package
 use rp_pico as bsp;
 // Setup panic handler
@@ -55,7 +54,11 @@ fn main() -> ! {
         Err(err) => error!("Failed to set GPIO2 HIGH: {}", err),
     };
 
+    let mut led = pins.led.into_push_pull_output();
+
+
     loop {
+        led.set_high().unwrap();
         info!("Reading from DHT11");
         match dht_sensor::dht11::Reading::read(&mut delay, &mut dht11_pin) {
             Ok(data) => {
@@ -72,6 +75,8 @@ fn main() -> ! {
               //     dht_sensor::DhtError::ChecksumMismatch => error!("DHT ChecksumMismatch"),
               // },
         };
+
+        led.set_low().unwrap();
 
         delay.delay_ms(1000);
     }
